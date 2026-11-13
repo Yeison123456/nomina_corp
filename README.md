@@ -203,7 +203,6 @@ El detalle completo está en el [manual de usuario](docs/04-manual-de-usuario.md
 | [3. Reglas de cálculo](docs/03-reglas-de-calculo.md) | Fórmulas de liquidación, fundamento legal y ejemplo resuelto. |
 | [4. Manual de usuario](docs/04-manual-de-usuario.md) | Operación de cada módulo paso a paso. |
 | [5. Guía técnica](docs/05-guia-tecnica.md) | Comandos, pruebas, extensión del motor, configuración y solución de problemas. |
-| [Video de demostración](docs/video/demo-libra.mp4) | Recorrido de 7 minutos por las funcionalidades, con explicaciones en texto en pantalla. |
 
 Los diagramas están escritos en **Mermaid** dentro de los documentos y se ven en Visual Studio Code con la extensión *Markdown Preview Mermaid Support* (`bierner.markdown-mermaid`). También están exportados como imágenes **SVG** en [`docs/diagramas/`](docs/diagramas/), que se abren con cualquier navegador:
 
