@@ -1,0 +1,61 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<span>Operación</span><span><a href="{{ volver }}">Novedades</a></span>{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<div class="rejilla rejilla--7-5">
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="panel__cuerpo">
+    {% if form.non_field_errors %}<div class="mensaje mensaje--error errores-generales">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+    <div class="form-rejilla">
+      {% campo form.contrato 12 %}
+      {% campo form.concepto 12 %}
+      {% campo form.fecha_inicio 6 %}{% campo form.fecha_fin 6 %}
+      {% campo form.cantidad 6 %}{% campo form.valor 6 %}
+      {% campo form.observacion 12 %}
+    </div>
+  </div>
+  <div class="form-acciones">
+    <a class="btn btn--sutil" href="{{ volver }}">Cancelar</a>
+    <button class="btn btn--primario" type="submit">Guardar novedad</button>
+  </div>
+</form>
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Tipos de novedad</span></div>
+  <table class="tabla tabla--compacta">
+    <tbody>
+      <tr><td class="fuerte">Por horas</td><td>Horas extra y recargos. Registre la fecha y el número de horas. Se liquidan en el periodo que contiene la fecha.</td></tr>
+      <tr><td class="fuerte">Por días</td><td>Incapacidades, licencias, vacaciones y suspensiones. Registre el rango; si cruza dos periodos, cada uno toma sus días.</td></tr>
+      <tr><td class="fuerte">Por valor</td><td>Comisiones, bonificaciones, auxilios y descuentos. Registre el valor total.</td></tr>
+    </tbody>
+  </table>
+  <div class="panel__pie tenue">Para vacaciones, el rango define los días calendario pagados y la cantidad define los días hábiles que se descuentan del saldo.</div>
+</section>
+</div>
+{{ form.capturas|json_script:"capturas" }}
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var capturas = JSON.parse(document.getElementById("capturas").textContent);
+  var concepto = document.getElementById("id_concepto");
+  var visibles = { HOR: ["cantidad"], DIA: ["fecha_fin", "cantidad"], VAL: ["valor"] };
+  var etiquetas = { HOR: "Horas", DIA: "Días hábiles (solo vacaciones)" };
+  function actualizar() {
+    var tipo = capturas[concepto.value];
+    ["fecha_fin", "cantidad", "valor"].forEach(function (nombre) {
+      var bloque = document.querySelector('[data-campo="' + nombre + '"]');
+      if (!bloque) return;
+      bloque.style.display = !tipo || visibles[tipo].indexOf(nombre) >= 0 ? "" : "none";
+    });
+    var etq = document.querySelector('[data-campo="cantidad"] label');
+    if (etq && tipo && etiquetas[tipo]) etq.firstChild.nodeValue = etiquetas[tipo];
+    var ini = document.querySelector('[data-campo="fecha_inicio"] label');
+    if (ini) ini.firstChild.nodeValue = tipo === "DIA" ? "Fecha inicial" : "Fecha";
+  }
+  concepto.addEventListener("change", actualizar);
+  actualizar();
+})();
+</script>
+{% endblock %}

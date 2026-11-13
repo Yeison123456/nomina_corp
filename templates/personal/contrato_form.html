@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<span>Personal</span><span><a href="{% url 'personal:empleados' %}">Empleados</a></span><span><a href="{{ volver }}">{{ empleado }}</a></span>{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="panel__cuerpo">
+    {% if form.non_field_errors %}<div class="mensaje mensaje--error errores-generales">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+    <div class="form-rejilla">
+      <div class="form-seccion">Condiciones del contrato</div>
+      {% campo form.numero 3 %}{% campo form.tipo 3 %}{% campo form.fecha_inicio 3 %}{% campo form.fecha_fin 3 %}
+      <div class="form-seccion">Remuneración</div>
+      {% campo form.tipo_salario 3 %}{% campo form.salario 3 %}{% campo form.periodicidad 3 %}
+      <div class="form-seccion">Ubicación y riesgo</div>
+      {% campo form.cargo 3 %}{% campo form.centro_costo 3 %}{% campo form.arl 3 %}{% campo form.clase_riesgo 3 %}
+    </div>
+  </div>
+  <div class="panel__pie tenue">
+    El auxilio de transporte se reconoce automáticamente a salarios de hasta 2 SMMLV. El salario integral exige un mínimo de 13 SMMLV y no causa cesantías, intereses ni prima.
+  </div>
+  <div class="form-acciones">
+    <a class="btn btn--sutil" href="{{ volver }}">Cancelar</a>
+    <button class="btn btn--primario" type="submit">Guardar contrato</button>
+  </div>
+</form>
+{% endblock %}

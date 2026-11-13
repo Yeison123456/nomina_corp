@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Nueva liquidación de contrato{% endblock %}
+{% block migas %}<span>Operación</span><span><a href="{% url 'nomina:liquidaciones_contrato' %}">Retiros y liquidaciones</a></span>{% endblock %}
+{% block encabezado %}Nueva liquidación de contrato{% endblock %}
+{% block contenido %}
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="panel__cuerpo">
+    {% if form.non_field_errors %}<div class="mensaje mensaje--error errores-generales">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+    <div class="form-rejilla">
+      {% campo form.contrato 6 %}{% campo form.fecha_retiro 3 %}{% campo form.causa 3 %}
+      {% campo form.observaciones 12 %}
+    </div>
+  </div>
+  <div class="form-acciones">
+    <a class="btn btn--sutil" href="{% url 'nomina:liquidaciones_contrato' %}">Cancelar</a>
+    <button class="btn" type="submit" name="calcular">Calcular</button>
+    {% if calculo %}<button class="btn btn--primario" type="submit" name="guardar">Guardar como borrador</button>{% endif %}
+  </div>
+</form>
+{% if calculo %}{% include "nomina/_calculo_retiro.html" %}
+<p class="tenue peq">El salario de los últimos días trabajados se paga en la nómina del periodo de retiro. Apruebe la liquidación antes de liquidar ese periodo para que el contrato quede terminado en la fecha correcta.</p>
+{% endif %}
+{% endblock %}

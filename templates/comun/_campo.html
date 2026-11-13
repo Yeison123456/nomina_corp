@@ -1,0 +1,7 @@
+{% if field.is_hidden %}{{ field }}{% else %}
+<div class="campo {% if ancho %}campo--{{ ancho }}{% endif %}{% if field.widget_type == 'checkbox' %} campo--check{% endif %}{% if field.errors %} con-error{% endif %}" data-campo="{{ field.name }}">
+  <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required and field.widget_type != 'checkbox' %}<span class="obligatorio">*</span>{% endif %}</label>
+  {{ field }}
+  {% if field.errors %}<div class="errores">{{ field.errors|join:" " }}</div>{% elif field.help_text %}<div class="ayuda">{{ field.help_text }}</div>{% endif %}
+</div>
+{% endif %}

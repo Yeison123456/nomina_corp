@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block titulo %}Empresa{% endblock %}
+{% block migas %}<span>Configuración</span><span>Empresa</span>{% endblock %}
+{% block encabezado %}Datos de la empresa{% endblock %}
+{% block acciones %}{% if es_admin %}<a class="btn btn--primario" href="{% url 'core:empresa_editar' %}">Editar</a>{% endif %}{% endblock %}
+{% block contenido %}
+{% if empresa %}
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Identificación del empleador</span></div>
+  <dl class="ficha ficha--3">
+    <div><dt>Razón social</dt><dd class="fuerte">{{ empresa.razon_social }}</dd></div>
+    <div><dt>NIT</dt><dd class="mono">{{ empresa.nit }}</dd></div>
+    <div><dt>Representante legal</dt><dd>{{ empresa.representante_legal }}</dd></div>
+    <div><dt>Dirección</dt><dd>{{ empresa.direccion }}</dd></div>
+    <div><dt>Ciudad</dt><dd>{{ empresa.ciudad }}</dd></div>
+    <div><dt>Teléfono</dt><dd>{{ empresa.telefono|default:"—" }}</dd></div>
+    <div><dt>Correo de nómina</dt><dd>{{ empresa.correo|default:"—" }}</dd></div>
+    <div><dt>Actividad económica</dt><dd>{{ empresa.actividad_economica|default:"—" }}</dd></div>
+    <div><dt>Exoneración art. 114-1 E.T.</dt><dd>{{ empresa.exonerada_aportes|yesno:"Sí aplica,No aplica" }}</dd></div>
+  </dl>
+  <div class="panel__pie tenue">Con la exoneración activa, la empresa no paga salud del empleador (8,5 %), SENA (2 %) ni ICBF (3 %) por trabajadores con IBC inferior a 10 SMMLV.</div>
+</section>
+{% else %}
+<div class="panel"><div class="vacio">No se han registrado los datos de la empresa.</div></div>
+{% endif %}
+{% endblock %}

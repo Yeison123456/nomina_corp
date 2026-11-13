@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Préstamos y libranzas{% endblock %}
+{% block migas %}<span>Operación</span><span>Préstamos y libranzas</span>{% endblock %}
+{% block encabezado %}Préstamos y libranzas{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Las cuotas se descuentan en cada periodo de pago del contrato y el saldo se actualiza al cerrar el periodo.</div>{% endblock %}
+{% block acciones %}{% if puede_editar %}<a class="btn btn--primario" href="{% url 'nomina:prestamo_nuevo' %}">Registrar préstamo</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <form class="filtros" method="get">
+    <div class="campo"><label for="estado">Estado</label>
+      <select class="control control--select" id="estado" name="estado" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        {% for v, t in estados %}<option value="{{ v }}" {% if v == estado %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+  </form>
+  <table class="tabla">
+    <thead><tr><th>Empleado</th><th>Tipo</th><th>Descripción</th><th>Desembolso</th><th class="num">Monto</th><th class="num">Cuotas</th><th class="num">Valor cuota</th><th class="num">Saldo</th><th style="width:120px">Avance</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for p in pagina %}
+      <tr>
+        <td><a href="{% url 'personal:empleado' p.contrato.empleado.pk %}">{{ p.contrato.empleado }}</a></td>
+        <td>{{ p.concepto.nombre }}</td>
+        <td>{{ p.descripcion }}</td>
+        <td class="mono">{{ p.fecha|date:"d/m/Y" }}</td>
+        <td class="num">{{ p.monto|pesos }}</td>
+        <td class="num">{{ p.numero_cuotas }}</td>
+        <td class="num">{{ p.valor_cuota|pesos }}</td>
+        <td class="num fuerte">{{ p.saldo|pesos }}</td>
+        <td>{% widthratio p.saldo p.monto 100 as pct_saldo %}<div class="barra-pct"><span style="width:calc(100% - {{ pct_saldo }}%)" title="Pagado"></span></div></td>
+        <td>{% estado p.estado p.get_estado_display %}</td>
+        <td class="acc">{% if es_admin and p.estado == "ACT" %}<form method="post" action="{% url 'nomina:prestamo_anular' p.pk %}" onsubmit="return confirm('¿Anular el préstamo? No se descontarán más cuotas.')">{% csrf_token %}<button class="vinculo" type="submit">Anular</button></form>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="11" class="vacio">No hay préstamos con este estado.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% include "comun/_paginacion.html" %}
+</section>
+{% endblock %}

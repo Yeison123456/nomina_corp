@@ -1,0 +1,102 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ empleado }}{% endblock %}
+{% block migas %}<span>Personal</span><span><a href="{% url 'personal:empleados' %}">Empleados</a></span><span>{{ empleado.numero_documento }}</span>{% endblock %}
+{% block encabezado %}{{ empleado.nombre_completo }}{% endblock %}
+{% block subtitulo %}<div class="subtitulo">{{ empleado.get_tipo_documento_display }} {{ empleado.numero_documento }} · {% if empleado.activo %}Activo{% else %}Retirado{% endif %}</div>{% endblock %}
+{% block acciones %}
+{% if puede_editar %}
+  <a class="btn btn--sutil" href="{% url 'personal:empleado_editar' empleado.pk %}">Editar datos</a>
+  {% if empleado.contrato_vigente %}
+  <a class="btn btn--sutil" href="{% url 'nomina:novedad_nueva' %}?contrato={{ empleado.contrato_vigente.pk }}">Registrar novedad</a>
+  {% else %}
+  <a class="btn btn--primario" href="{% url 'personal:contrato_nuevo' empleado.pk %}">Nuevo contrato</a>
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Datos personales y afiliaciones</span></div>
+  <dl class="ficha">
+    <div><dt>Fecha de nacimiento</dt><dd>{{ empleado.fecha_nacimiento|date:"d/m/Y" }}</dd></div>
+    <div><dt>Género</dt><dd>{{ empleado.get_genero_display }}</dd></div>
+    <div><dt>Correo</dt><dd>{{ empleado.correo|default:"—" }}</dd></div>
+    <div><dt>Teléfono</dt><dd>{{ empleado.telefono|default:"—" }}</dd></div>
+    <div><dt>Dirección</dt><dd>{{ empleado.direccion|default:"—" }}, {{ empleado.ciudad }}</dd></div>
+    <div><dt>Cuenta de nómina</dt><dd>{% if empleado.banco %}{{ empleado.banco }} · {{ empleado.get_tipo_cuenta_display }} <span class="mono">{{ empleado.numero_cuenta }}</span>{% else %}—{% endif %}</dd></div>
+    <div><dt>EPS</dt><dd>{{ empleado.eps }}</dd></div>
+    <div><dt>Fondo de pensiones</dt><dd>{{ empleado.afp|default:"No cotiza" }}</dd></div>
+    <div><dt>Fondo de cesantías</dt><dd>{{ empleado.fondo_cesantias|default:"—" }}</dd></div>
+    <div><dt>Caja de compensación</dt><dd>{{ empleado.caja }}</dd></div>
+    <div><dt>Registrado</dt><dd>{{ empleado.creado|date:"d/m/Y" }}</dd></div>
+    <div><dt>Última actualización</dt><dd>{{ empleado.actualizado|date:"d/m/Y H:i" }}</dd></div>
+  </dl>
+</section>
+
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Contratos</span>{% if puede_editar and not empleado.contrato_vigente %}<a class="peq" href="{% url 'personal:contrato_nuevo' empleado.pk %}">Agregar contrato</a>{% endif %}</div>
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr><th>Número</th><th>Tipo</th><th>Cargo / centro de costo</th><th class="num">Salario</th><th>Pago</th><th>ARL</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for c in contratos %}
+      <tr>
+        <td class="mono">{{ c.numero }}</td>
+        <td>{{ c.get_tipo_display }}{% if c.es_integral %}<br><span class="etiqueta">Salario integral</span>{% endif %}</td>
+        <td><div class="persona">{{ c.cargo }}<small>{{ c.centro_costo }}</small></div></td>
+        <td class="num">{{ c.salario|pesos }}</td>
+        <td>{{ c.get_periodicidad_display }}</td>
+        <td>{{ c.arl }} · clase {{ c.clase_riesgo }}</td>
+        <td class="mono">{{ c.fecha_inicio|date:"d/m/Y" }} – {% if c.fecha_terminacion %}{{ c.fecha_terminacion|date:"d/m/Y" }}{% elif c.fecha_fin %}{{ c.fecha_fin|date:"d/m/Y" }}{% else %}indefinido{% endif %}</td>
+        <td>{% estado c.estado c.get_estado_display %}</td>
+        <td class="acc">
+          {% if puede_editar and c.estado == "VIG" %}
+            <a href="{% url 'personal:contrato_editar' empleado.pk c.pk %}">Editar</a>
+            <a href="{% url 'nomina:liquidacion_contrato_nueva' %}?contrato={{ c.pk }}">Liquidar retiro</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="9" class="vacio">El empleado no tiene contratos registrados.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<div class="rejilla rejilla--2">
+  <section class="panel">
+    <div class="panel__cab"><span class="panel__titulo">Últimas liquidaciones</span></div>
+    <table class="tabla tabla--compacta">
+      <thead><tr><th>Periodo</th><th class="num">Devengado</th><th class="num">Neto</th><th></th></tr></thead>
+      <tbody>
+      {% for l in liquidaciones %}
+        <tr><td><a href="{% url 'nomina:liquidacion' l.pk %}">{{ l.periodo.nombre }}</a></td><td class="num">{{ l.total_devengado|pesos }}</td><td class="num fuerte">{{ l.neto_pagar|pesos }}</td>
+        <td class="acc"><a href="{% url 'nomina:desprendible' l.pk %}" target="_blank">PDF</a></td></tr>
+      {% empty %}<tr><td colspan="4" class="vacio">Sin liquidaciones.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section class="panel">
+    <div class="panel__cab"><span class="panel__titulo">Novedades recientes</span></div>
+    <table class="tabla tabla--compacta">
+      <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Cant. / valor</th><th>Estado</th></tr></thead>
+      <tbody>
+      {% for n in novedades %}
+        <tr><td class="mono">{{ n.fecha_inicio|date:"d/m/Y" }}{% if n.fecha_fin %} – {{ n.fecha_fin|date:"d/m" }}{% endif %}</td><td>{{ n.concepto.nombre }}</td>
+        <td class="num">{% if n.valor %}{{ n.valor|pesos }}{% elif n.cantidad %}{{ n.cantidad|numero }}{% else %}—{% endif %}</td><td>{% estado n.estado n.get_estado_display %}</td></tr>
+      {% empty %}<tr><td colspan="4" class="vacio">Sin novedades.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+
+{% if prestamos %}
+<section class="panel" style="margin-top:18px">
+  <div class="panel__cab"><span class="panel__titulo">Préstamos y libranzas</span></div>
+  <table class="tabla tabla--compacta">
+    <thead><tr><th>Descripción</th><th>Fecha</th><th class="num">Monto</th><th class="num">Cuota</th><th class="num">Saldo</th><th>Estado</th></tr></thead>
+    <tbody>{% for p in prestamos %}<tr><td>{{ p.descripcion }}</td><td class="mono">{{ p.fecha|date:"d/m/Y" }}</td><td class="num">{{ p.monto|pesos }}</td><td class="num">{{ p.valor_cuota|pesos }}</td><td class="num fuerte">{{ p.saldo|pesos }}</td><td>{% estado p.estado p.get_estado_display %}</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

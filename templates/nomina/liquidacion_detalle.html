@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Liquidación {{ liq.contrato.empleado }}{% endblock %}
+{% block migas %}<span>Operación</span><span><a href="{% url 'nomina:periodos' %}">Periodos</a></span><span><a href="{% url 'nomina:periodo' liq.periodo.pk %}" class="mono">{{ liq.periodo.codigo }}</a></span>{% endblock %}
+{% block encabezado %}{{ liq.contrato.empleado.nombre_completo }}{% endblock %}
+{% block subtitulo %}<div class="subtitulo">{{ liq.periodo.nombre }} · contrato <span class="mono">{{ liq.contrato.numero }}</span> · {{ liq.contrato.cargo }}</div>{% endblock %}
+{% block acciones %}
+  <a class="btn btn--sutil" href="{% url 'personal:empleado' liq.contrato.empleado.pk %}">Ficha del empleado</a>
+  <a class="btn btn--primario" href="{% url 'nomina:desprendible' liq.pk %}" target="_blank">Desprendible PDF</a>
+{% endblock %}
+{% block contenido %}
+<div class="cifras">
+  <div class="cifra"><div class="cifra__etq">Salario mensual</div><div class="cifra__valor">{{ liq.salario|pesos }}</div><div class="cifra__nota">{{ liq.contrato.get_tipo_salario_display }}</div></div>
+  <div class="cifra"><div class="cifra__etq">Días</div><div class="cifra__valor">{{ liq.dias_periodo }}</div><div class="cifra__nota">{{ liq.dias_trabajados }} pagados como salario</div></div>
+  <div class="cifra"><div class="cifra__etq">IBC</div><div class="cifra__valor">{{ liq.ibc|pesos }}</div><div class="cifra__nota">Base de prestaciones {{ liq.base_prestaciones|pesos }}</div></div>
+  <div class="cifra cifra--destacada"><div class="cifra__etq">Neto a pagar</div><div class="cifra__valor">{{ liq.neto_pagar|pesos }}</div></div>
+  <div class="cifra"><div class="cifra__etq">Costo para la empresa</div><div class="cifra__valor">{{ liq.costo_total|pesos }}</div></div>
+</div>
+
+{% if advertencias %}
+<div class="aviso" style="margin-bottom:18px"><b>Observaciones del cálculo</b><ul>{% for a in advertencias %}<li>{{ a }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<div class="rejilla rejilla--2">
+{% for tipo, nombre, filas, total in secciones %}
+  <section class="panel">
+    <div class="panel__cab"><span class="panel__titulo">{{ nombre }}</span><span class="fuerte">{{ total|pesos }}</span></div>
+    <table class="tabla tabla--compacta">
+      <thead><tr><th>Concepto</th><th class="num">Cantidad</th><th class="num">Base</th><th class="num">Tasa / factor</th><th class="num">Valor</th></tr></thead>
+      <tbody>
+      {% for d in filas %}
+        <tr>
+          <td>{{ d.concepto.nombre }}{% if d.novedad %}<br><span class="tenue peq">{{ d.novedad.observacion|default:"Novedad" }} · {{ d.novedad.fecha_inicio|date:"d/m" }}{% if d.novedad.fecha_fin %}–{{ d.novedad.fecha_fin|date:"d/m" }}{% endif %}</span>{% endif %}</td>
+          <td class="num">{% if d.cantidad %}{{ d.cantidad|numero }}{% endif %}</td>
+          <td class="num">{% if d.base %}{{ d.base|pesos }}{% endif %}</td>
+          <td class="num">{% if d.tasa %}{% if d.concepto.captura == "HOR" %}× {{ d.tasa|numero:2 }}{% else %}{{ d.tasa|porcentaje:3 }}{% endif %}{% endif %}</td>
+          <td class="num fuerte">{{ d.valor|pesos }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endfor %}
+</div>
+<p class="tenue peq" style="margin-top:14px">
+  Horas: base = valor de la hora ordinaria (salario / horas mensuales); el factor incluye la hora y su recargo.
+  Días: base = salario mensual, tasa = proporción pagada. Intereses de cesantías: 12 % anual sobre la provisión de cesantías.
+</p>
+{% endblock %}

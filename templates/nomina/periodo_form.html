@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<span>Operación</span><span><a href="{{ volver }}">Periodos de nómina</a></span>{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<div class="rejilla rejilla--7-5">
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="panel__cuerpo">
+    {% if form.non_field_errors %}<div class="mensaje mensaje--error errores-generales">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+    <div class="form-rejilla">
+      {% campo form.periodicidad 6 %}{% campo form.anio 6 %}
+      {% campo form.mes 6 %}{% campo form.numero 6 %}
+      {% campo form.fecha_pago 6 %}
+      {% campo form.observaciones 12 %}
+    </div>
+  </div>
+  <div class="form-acciones">
+    <a class="btn btn--sutil" href="{{ volver }}">Cancelar</a>
+    <button class="btn btn--primario" type="submit">Crear periodo</button>
+  </div>
+</form>
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Cómo se determinan las fechas</span></div>
+  <div class="panel__cuerpo peq">
+    <p style="margin-top:0"><b>Quincenal:</b> el número 1 cubre del 1 al 15; el número 2, del 16 al último día del mes. Cada quincena se liquida por 15 días.</p>
+    <p><b>Mensual:</b> cubre el mes calendario completo y se liquida por 30 días.</p>
+    <p style="margin-bottom:0" class="tenue">Solo se incluyen los contratos cuya periodicidad de pago coincide con la del periodo.</p>
+  </div>
+</section>
+</div>
+{% endblock %}

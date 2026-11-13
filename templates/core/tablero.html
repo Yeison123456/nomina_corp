@@ -1,0 +1,130 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Tablero{% endblock %}
+{% block migas %}<span>Operación</span><span>Tablero</span>{% endblock %}
+{% block encabezado %}Tablero de nómina{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Estado de la operación al {{ hoy|date:"j \d\e F \d\e Y"|lower }}</div>{% endblock %}
+{% block acciones %}
+  {% if puede_editar %}
+  <a class="btn btn--sutil" href="{% url 'nomina:novedad_nueva' %}">Registrar novedad</a>
+  <a class="btn btn--primario" href="{% url 'nomina:periodo_nuevo' %}">Nuevo periodo</a>
+  {% endif %}
+{% endblock %}
+
+{% block contenido %}
+<div class="cifras">
+  <div class="cifra">
+    <div class="cifra__etq">Empleados activos</div>
+    <div class="cifra__valor">{{ empleados_activos }}</div>
+    <div class="cifra__nota">{{ contratos_q }} quincenales · {{ contratos_m }} mensuales</div>
+  </div>
+  <div class="cifra">
+    <div class="cifra__etq">Novedades pendientes</div>
+    <div class="cifra__valor">{{ novedades_pendientes }}</div>
+    <div class="cifra__nota"><a href="{% url 'nomina:novedades' %}">Revisar novedades</a></div>
+  </div>
+  <div class="cifra">
+    <div class="cifra__etq">Neto pagado{% if ultimo %} · {{ ultimo.etiqueta }}{% endif %}</div>
+    <div class="cifra__valor">{{ ultimo.neto|pesos }}</div>
+    <div class="cifra__nota">Último mes cerrado</div>
+  </div>
+  <div class="cifra cifra--destacada">
+    <div class="cifra__etq">Costo total{% if ultimo %} · {{ ultimo.etiqueta }}{% endif %}</div>
+    <div class="cifra__valor">{{ ultimo.costo|pesos }}</div>
+    <div class="cifra__nota">Devengado + aportes + provisiones</div>
+  </div>
+</div>
+
+<div class="rejilla rejilla--7-5">
+  <section class="panel">
+    <div class="panel__cab">
+      <span class="panel__titulo">Costo de nómina por mes · periodos cerrados</span>
+      <span class="leyenda">
+        <span><i style="background:var(--pizarra-700)"></i>Devengado</span>
+        <span><i style="background:var(--pizarra-300)"></i>Aportes</span>
+        <span><i style="background:var(--cobre)"></i>Provisiones</span>
+      </span>
+    </div>
+    {% if meses %}
+    <div class="grafico">
+      <div class="grafico__eje"><span>100 %</span><span>75 %</span><span>50 %</span><span>25 %</span><span>0</span></div>
+      <div class="grafico__area">
+        {% for m in meses %}
+        <div class="grafico__col" title="{{ m.etiqueta }}: {{ m.costo|pesos }}">
+          <div class="grafico__seg grafico__seg--dev" style="height:{{ m.alto_dev|stringformat:'s' }}%"></div>
+          <div class="grafico__seg grafico__seg--apo" style="height:{{ m.alto_apo|stringformat:'s' }}%"></div>
+          <div class="grafico__seg grafico__seg--pro" style="height:{{ m.alto_pro|stringformat:'s' }}%"></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="grafico__etqs">{% for m in meses %}<span>{{ m.etiqueta }}</span>{% endfor %}</div>
+    </div>
+    <div class="tabla-env">
+      <table class="tabla tabla--compacta">
+        <thead><tr><th>Mes</th><th class="num">Devengado</th><th class="num">Aportes</th><th class="num">Provisiones</th><th class="num">Costo total</th></tr></thead>
+        <tbody>
+        {% for m in meses %}
+          <tr><td>{{ m.etiqueta }}</td><td class="num">{{ m.devengado|pesos }}</td><td class="num">{{ m.aportes|pesos }}</td><td class="num">{{ m.provisiones|pesos }}</td><td class="num fuerte">{{ m.costo|pesos }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="vacio">Aún no hay periodos cerrados.</div>
+    {% endif %}
+  </section>
+
+  <div>
+    <section class="panel">
+      <div class="panel__cab"><span class="panel__titulo">Periodos en curso</span><a class="peq" href="{% url 'nomina:periodos' %}">Ver todos</a></div>
+      <table class="tabla">
+        <tbody>
+        {% for p in periodos_abiertos %}
+          <tr>
+            <td><a href="{% url 'nomina:periodo' p.pk %}" class="fuerte">{{ p.nombre }}</a><br><span class="tenue peq mono">{{ p.codigo }} · pago {{ p.fecha_pago|date:"d/m/Y" }}</span></td>
+            <td class="acc">{% estado p.estado p.get_estado_display %}</td>
+          </tr>
+        {% empty %}
+          <tr><td class="vacio">No hay periodos abiertos.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="panel__cab"><span class="panel__titulo">Contratos a término fijo por vencer</span><span class="tenue peq">Próximos 60 días</span></div>
+      <table class="tabla">
+        <tbody>
+        {% for c in vencimientos %}
+          <tr>
+            <td><div class="persona"><a href="{% url 'personal:empleado' c.empleado.pk %}">{{ c.empleado }}</a><small>{{ c.cargo }} · {{ c.numero }}</small></div></td>
+            <td class="num">{{ c.fecha_fin|date:"d/m/Y" }}<br><span class="tenue peq">{{ c.fecha_fin|timeuntil:hoy }}</span></td>
+          </tr>
+        {% empty %}
+          <tr><td class="vacio">Sin vencimientos próximos.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <div class="panel__pie tenue">La ley exige preaviso escrito de 30 días para no prorrogar el contrato.</div>
+    </section>
+  </div>
+</div>
+
+{% if centros %}
+<section class="panel" style="margin-top:18px">
+  <div class="panel__cab"><span class="panel__titulo">Distribución del costo por centro de costo · {{ ultimo.etiqueta }}</span><a class="peq" href="{% url 'nomina:reportes' %}">Ir a reportes</a></div>
+  <table class="tabla">
+    <thead><tr><th>Centro de costo</th><th class="num">Personas</th><th class="num">Costo</th><th style="width:34%">Participación</th></tr></thead>
+    <tbody>
+    {% for c in centros %}
+      <tr>
+        <td>{{ c.contrato__centro_costo__nombre }}</td>
+        <td class="num">{{ c.personas }}</td>
+        <td class="num">{{ c.costo|pesos }}</td>
+        <td><div style="display:flex;gap:10px;align-items:center"><div class="barra-pct" style="flex:1"><span style="width:{{ c.pct|stringformat:'s' }}%"></span></div><span class="num peq" style="width:46px">{{ c.pct|numero:1 }} %</span></div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titulo %}Conceptos de nómina{% endblock %}
+{% block migas %}<span>Configuración</span><span>Conceptos de nómina</span>{% endblock %}
+{% block encabezado %}Conceptos de nómina{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Catálogo de conceptos y su incidencia en las bases de cálculo. Las reglas de cada concepto están en el motor de cálculo.</div>{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr><th>Código</th><th>Concepto</th><th>Captura</th><th class="num">Salarial</th><th class="num">Base SS</th><th class="num">Base prest.</th><th class="num">Base vac.</th><th>Regla de cálculo</th></tr></thead>
+    <tbody>
+    {% for grupo, conceptos in grupos.items %}
+      <tr class="grupo"><td colspan="8">{{ grupo }}</td></tr>
+      {% for c in conceptos %}
+      <tr>
+        <td class="mono">{{ c.codigo }}</td>
+        <td class="fuerte">{{ c.nombre }}</td>
+        <td class="tenue">{{ c.get_captura_display }}</td>
+        <td class="num">{{ c.salarial|yesno:"Sí,—" }}</td>
+        <td class="num">{{ c.base_seguridad_social|yesno:"Sí,—" }}</td>
+        <td class="num">{{ c.base_prestaciones|yesno:"Sí,—" }}</td>
+        <td class="num">{{ c.base_vacaciones|yesno:"Sí,—" }}</td>
+        <td class="tenue">{{ c.descripcion }}</td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

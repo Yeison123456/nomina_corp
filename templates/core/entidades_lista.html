@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titulo %}Entidades{% endblock %}
+{% block migas %}<span>Configuración</span><span>Entidades</span>{% endblock %}
+{% block encabezado %}Entidades{% endblock %}
+{% block subtitulo %}<div class="subtitulo">EPS, fondos de pensiones y cesantías, cajas de compensación, ARL y bancos.</div>{% endblock %}
+{% block acciones %}{% if es_admin %}<a class="btn btn--primario" href="{% url 'core:entidad_nueva' %}">Nueva entidad</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <form class="filtros" method="get">
+    <div class="campo"><label for="tipo">Tipo</label>
+      <select class="control control--select" name="tipo" id="tipo" onchange="this.form.submit()">
+        <option value="">Todas</option>
+        {% for v, t in tipos %}<option value="{{ v }}" {% if v == tipo %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+  </form>
+  <table class="tabla">
+    <thead><tr><th>Nombre</th><th>Tipo</th><th>NIT</th><th>Código</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for e in entidades %}
+      <tr>
+        <td class="fuerte">{{ e.nombre }}</td><td>{{ e.get_tipo_display }}</td><td class="mono">{{ e.nit|default:"—" }}</td>
+        <td class="mono">{{ e.codigo|default:"—" }}</td>
+        <td>{% if e.activa %}<span class="estado estado--vigente">Activa</span>{% else %}<span class="estado estado--anulada">Inactiva</span>{% endif %}</td>
+        <td class="acc">{% if es_admin %}<a href="{% url 'core:entidad_editar' e.pk %}">Editar</a>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

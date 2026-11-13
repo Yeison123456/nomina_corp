@@ -1,0 +1,56 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Reportes{% endblock %}
+{% block migas %}<span>Análisis</span><span>Reportes</span>{% endblock %}
+{% block encabezado %}Reportes de nómina · {{ nombre_mes }} {{ anio }}{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Consolidado mensual de periodos liquidados y cerrados (quincenales y mensuales).</div>{% endblock %}
+{% block acciones %}
+<form method="get" class="acciones">
+  <select class="control control--select" name="mes" style="width:150px">{% for n, m in meses %}<option value="{{ n }}" {% if n == mes %}selected{% endif %}>{{ m }}</option>{% endfor %}</select>
+  <select class="control control--select" name="anio" style="width:100px">{% for a in anios %}<option value="{{ a }}" {% if a == anio %}selected{% endif %}>{{ a }}</option>{% endfor %}</select>
+  <button class="btn btn--sutil" type="submit">Consultar</button>
+</form>
+{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Costo de nómina por centro de costo</span>
+    {% if costos %}<a class="btn btn--sutil btn--peq" href="?anio={{ anio }}&mes={{ mes }}&exportar=costos">Exportar a Excel</a>{% endif %}</div>
+  <table class="tabla">
+    <thead><tr><th>Centro de costo</th><th class="num">Empleados</th><th class="num">Devengado</th><th class="num">Aportes</th><th class="num">Provisiones</th><th class="num">Costo total</th></tr></thead>
+    <tbody>
+    {% for c in costos %}
+      <tr><td>{{ c.centro }}</td><td class="num">{{ c.empleados }}</td><td class="num">{{ c.devengado|pesos }}</td><td class="num">{{ c.aportes|pesos }}</td><td class="num">{{ c.provisiones|pesos }}</td><td class="num fuerte">{{ c.costo|pesos }}</td></tr>
+    {% empty %}
+      <tr><td colspan="6" class="vacio">No hay periodos liquidados en {{ nombre_mes|lower }} de {{ anio }}.</td></tr>
+    {% endfor %}
+    </tbody>
+    {% if costos %}<tfoot><tr><td colspan="2">Total</td><td class="num">{{ tot_costos.devengado|pesos }}</td><td class="num">{{ tot_costos.aportes|pesos }}</td><td class="num">{{ tot_costos.provisiones|pesos }}</td><td class="num">{{ tot_costos.costo|pesos }}</td></tr></tfoot>{% endif %}
+  </table>
+</section>
+
+{% if costos %}
+<div class="rejilla rejilla--7-5">
+  <section class="panel">
+    <div class="panel__cab"><span class="panel__titulo">Aportes a seguridad social por entidad</span><span class="fuerte">{{ tot_ss|pesos }}</span></div>
+    <table class="tabla tabla--compacta">
+      <thead><tr><th>Subsistema</th><th>Entidad</th><th class="num">Afiliados</th><th class="num">Empleado</th><th class="num">Empleador</th><th class="num">Total</th></tr></thead>
+      <tbody>
+      {% for e in entidades %}
+        <tr><td class="tenue">{{ e.tipo }}</td><td>{{ e.nombre }}</td><td class="num">{{ e.afiliados }}</td><td class="num">{{ e.empleado|pesos }}</td><td class="num">{{ e.empleador|pesos }}</td><td class="num fuerte">{{ e.total|pesos }}</td></tr>
+      {% endfor %}
+      {% for p in parafiscales %}
+        <tr><td class="tenue">Parafiscal</td><td>{{ p.concepto__nombre }}</td><td class="num">—</td><td class="num">—</td><td class="num">{{ p.total|pesos }}</td><td class="num fuerte">{{ p.total|pesos }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="panel__pie tenue">Pensiones incluye el fondo de solidaridad pensional descontado al empleado.</div>
+  </section>
+  <section class="panel">
+    <div class="panel__cab"><span class="panel__titulo">Provisiones del mes</span><span class="fuerte">{{ tot_prov|pesos }}</span></div>
+    <table class="tabla">
+      <tbody>{% for p in provisiones %}<tr><td>{{ p.concepto__nombre }}</td><td class="num">{{ p.total|pesos }}</td></tr>{% endfor %}</tbody>
+      <tfoot><tr><td>Total provisionado</td><td class="num">{{ tot_prov|pesos }}</td></tr></tfoot>
+    </table>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

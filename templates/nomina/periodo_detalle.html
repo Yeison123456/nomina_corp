@@ -1,0 +1,114 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ periodo.codigo }}{% endblock %}
+{% block migas %}<span>Operación</span><span><a href="{% url 'nomina:periodos' %}">Periodos de nómina</a></span><span class="mono">{{ periodo.codigo }}</span>{% endblock %}
+{% block encabezado %}{{ periodo.nombre }}{% endblock %}
+{% block subtitulo %}<div class="subtitulo">{{ periodo.fecha_inicio|date:"d/m/Y" }} – {{ periodo.fecha_fin|date:"d/m/Y" }} · pago el {{ periodo.fecha_pago|date:"d/m/Y" }} · {% estado periodo.estado periodo.get_estado_display %}</div>{% endblock %}
+{% block acciones %}
+  {% if liquidaciones %}
+    <a class="btn btn--sutil" href="{% url 'nomina:sabana' periodo.pk %}">Sábana Excel</a>
+    <a class="btn btn--sutil" href="{% url 'nomina:desprendibles_periodo' periodo.pk %}" target="_blank">Desprendibles PDF</a>
+  {% endif %}
+  {% if periodo.editable and puede_editar %}
+    <form method="post" action="{% url 'nomina:periodo_liquidar' periodo.pk %}">{% csrf_token %}
+      <button class="btn {% if periodo.estado == 'BOR' %}btn--primario{% endif %}" type="submit">{% if periodo.estado == 'BOR' %}Liquidar{% else %}Reliquidar{% endif %}</button>
+    </form>
+  {% endif %}
+  {% if periodo.estado == 'LIQ' and es_admin %}
+    <form method="post" action="{% url 'nomina:periodo_cerrar' periodo.pk %}" onsubmit="return confirm('Al cerrar el periodo se aplican las novedades y se descuentan las cuotas de préstamos. ¿Continuar?')">{% csrf_token %}
+      <button class="btn btn--acento" type="submit">Cerrar periodo</button>
+    </form>
+  {% endif %}
+  {% if periodo.estado == 'CER' and es_admin %}
+    <form method="post" action="{% url 'nomina:periodo_reabrir' periodo.pk %}" onsubmit="return confirm('¿Reabrir el periodo? Se revertirán novedades aplicadas y abonos a préstamos.')">{% csrf_token %}
+      <button class="btn btn--sutil" type="submit">Reabrir</button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block contenido %}
+<div class="pasos">
+  <div class="paso paso--hecho"><b>1</b> Periodo creado</div>
+  <div class="paso {% if periodo.estado == 'BOR' %}paso--actual{% else %}paso--hecho{% endif %}"><b>2</b> Novedades y liquidación</div>
+  <div class="paso {% if periodo.estado == 'LIQ' %}paso--actual{% elif periodo.estado == 'CER' %}paso--hecho{% endif %}"><b>3</b> Revisión y cierre</div>
+  <div class="paso {% if periodo.estado == 'CER' %}paso--hecho{% endif %}"><b>4</b> Pago y archivo</div>
+</div>
+
+{% if periodo.editable and novedades_pendientes %}
+<div class="aviso" style="margin-bottom:18px">
+  Hay <b>{{ novedades_pendientes }}</b> novedad{{ novedades_pendientes|pluralize:"es" }} pendiente{{ novedades_pendientes|pluralize }} con fecha dentro o antes de este periodo que no están incluidas en la liquidación.
+  {% if periodo.estado == 'LIQ' %}Reliquide el periodo antes de cerrarlo.{% endif %}
+  <a href="{% url 'nomina:novedades' %}">Ver novedades</a>
+</div>
+{% endif %}
+
+{% if liquidaciones %}
+<div class="cifras">
+  <div class="cifra"><div class="cifra__etq">Empleados</div><div class="cifra__valor">{{ liquidaciones|length }}</div><div class="cifra__nota">de {{ contratos_esperados }} contratos del periodo</div></div>
+  <div class="cifra"><div class="cifra__etq">Devengado</div><div class="cifra__valor">{{ totales.devengado|pesos }}</div></div>
+  <div class="cifra"><div class="cifra__etq">Deducciones</div><div class="cifra__valor">{{ totales.deducciones|pesos }}</div></div>
+  <div class="cifra cifra--destacada"><div class="cifra__etq">Neto a pagar</div><div class="cifra__valor">{{ totales.neto|pesos }}</div></div>
+  <div class="cifra"><div class="cifra__etq">Costo empresa</div><div class="cifra__valor">{{ totales.costo|pesos }}</div><div class="cifra__nota">Aportes {{ totales.aportes|pesos }} · provisiones {{ totales.provisiones|pesos }}</div></div>
+</div>
+
+{% if con_advertencias %}
+<div class="aviso" style="margin-bottom:18px">
+  <b>Observaciones del cálculo</b>
+  <ul>{% for l in con_advertencias %}{% for a in l.advertencias.splitlines %}<li><a href="{% url 'nomina:liquidacion' l.pk %}">{{ l.contrato.empleado }}</a>: {{ a }}</li>{% endfor %}{% endfor %}</ul>
+</div>
+{% endif %}
+
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Liquidación por empleado</span><span class="tenue peq">Clic en el nombre para ver el detalle</span></div>
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr><th>Empleado</th><th>Centro de costo</th><th class="num">Días</th><th class="num">Salario</th><th class="num">IBC</th><th class="num">Devengado</th><th class="num">Deducciones</th><th class="num">Neto</th><th class="num">Costo total</th><th></th></tr></thead>
+    <tbody>
+    {% for l in liquidaciones %}
+      <tr>
+        <td><div class="persona"><a class="fuerte" href="{% url 'nomina:liquidacion' l.pk %}">{{ l.contrato.empleado.apellidos }}, {{ l.contrato.empleado.nombres }}</a><small>{{ l.contrato.cargo }}</small></div></td>
+        <td class="tenue">{{ l.contrato.centro_costo.nombre }}</td>
+        <td class="num">{{ l.dias_periodo }}{% if l.dias_trabajados != l.dias_periodo %}<span class="tenue peq"> ({{ l.dias_trabajados }})</span>{% endif %}</td>
+        <td class="num">{{ l.salario|pesos }}</td>
+        <td class="num">{{ l.ibc|pesos }}</td>
+        <td class="num">{{ l.total_devengado|pesos }}</td>
+        <td class="num">{{ l.total_deducciones|pesos }}</td>
+        <td class="num fuerte">{{ l.neto_pagar|pesos }}</td>
+        <td class="num">{{ l.costo_total|pesos }}</td>
+        <td class="acc"><a href="{% url 'nomina:desprendible' l.pk %}" target="_blank">PDF</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr><td colspan="5">Totales del periodo</td><td class="num">{{ totales.devengado|pesos }}</td><td class="num">{{ totales.deducciones|pesos }}</td><td class="num">{{ totales.neto|pesos }}</td><td class="num">{{ totales.costo|pesos }}</td><td></td></tr></tfoot>
+  </table>
+  </div>
+  <div class="panel__pie tenue">Días: días del contrato en el periodo; entre paréntesis, los pagados como salario cuando hubo ausencias.</div>
+</section>
+
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Resumen por concepto</span></div>
+  <table class="tabla tabla--compacta">
+    <thead><tr><th>Código</th><th>Concepto</th><th class="num">Personas</th><th class="num">Valor</th></tr></thead>
+    <tbody>
+    {% for nombre, filas in grupos %}
+      <tr class="grupo"><td colspan="4">{{ nombre }}</td></tr>
+      {% for r in filas %}<tr><td class="mono">{{ r.concepto__codigo }}</td><td>{{ r.concepto__nombre }}</td><td class="num">{{ r.personas }}</td><td class="num">{{ r.total|pesos }}</td></tr>{% endfor %}
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% else %}
+<section class="panel panel--plano">
+  <div class="vacio">
+    <p style="margin-top:0">El periodo aún no se ha liquidado. Se incluirán <b>{{ contratos_esperados }}</b> contrato{{ contratos_esperados|pluralize }} con pago {{ periodo.get_periodicidad_display|lower }}.</p>
+    {% if puede_editar %}
+    <form method="post" action="{% url 'nomina:periodo_eliminar' periodo.pk %}" onsubmit="return confirm('¿Eliminar este periodo?')">{% csrf_token %}<button class="vinculo" type="submit">Eliminar periodo</button></form>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<p class="tenue peq">
+  {% if periodo.fecha_liquidacion %}Liquidado el {{ periodo.fecha_liquidacion|date:"d/m/Y H:i" }}{% if periodo.liquidado_por %} por {{ periodo.liquidado_por.username }}{% endif %}.{% endif %}
+  {% if periodo.fecha_cierre %} Cerrado el {{ periodo.fecha_cierre|date:"d/m/Y H:i" }}{% if periodo.cerrado_por %} por {{ periodo.cerrado_por.username }}{% endif %}.{% endif %}
+</p>
+{% endblock %}

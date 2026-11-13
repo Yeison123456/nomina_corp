@@ -1,0 +1,25 @@
+{% load libra %}
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Cálculo de la liquidación</span><span class="tenue peq">Base = salario + auxilio de transporte + promedio variable</span></div>
+  <dl class="ficha">
+    <div><dt>Salario mensual</dt><dd>{{ calculo.salario|pesos }}</dd></div>
+    <div><dt>Auxilio de transporte</dt><dd>{{ calculo.auxilio_transporte|pesos }}</dd></div>
+    <div><dt>Promedio variable</dt><dd>{{ calculo.promedio_variable|pesos }}</dd></div>
+    <div><dt>Base de liquidación</dt><dd class="fuerte">{{ calculo.base_cesantias|pesos }}</dd></div>
+    <div><dt>Días totales de servicio</dt><dd>{{ calculo.dias_laborados|numero }}</dd></div>
+    <div><dt>Vacaciones causadas</dt><dd>{{ calculo.dias_vacaciones_causados|numero }} días</dd></div>
+    <div><dt>Vacaciones disfrutadas</dt><dd>{{ calculo.dias_vacaciones_disfrutados|numero }} días</dd></div>
+    <div><dt>Vacaciones pendientes</dt><dd class="fuerte">{{ calculo.dias_vacaciones|numero }} días</dd></div>
+  </dl>
+  <table class="tabla">
+    <thead><tr><th>Concepto</th><th class="num">Días</th><th>Fórmula</th><th class="num">Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Cesantías</td><td class="num">{{ calculo.dias_cesantias }}</td><td class="tenue mono">base × días / 360</td><td class="num">{{ calculo.cesantias|pesos }}</td></tr>
+      <tr><td>Intereses sobre cesantías</td><td class="num">{{ calculo.dias_cesantias }}</td><td class="tenue mono">cesantías × días × 12 % / 360</td><td class="num">{{ calculo.intereses_cesantias|pesos }}</td></tr>
+      <tr><td>Prima de servicios</td><td class="num">{{ calculo.dias_prima }}</td><td class="tenue mono">base × días del semestre / 360</td><td class="num">{{ calculo.prima|pesos }}</td></tr>
+      <tr><td>Vacaciones compensadas</td><td class="num">{{ calculo.dias_vacaciones|numero }}</td><td class="tenue mono">salario / 30 × días pendientes</td><td class="num">{{ calculo.vacaciones|pesos }}</td></tr>
+      <tr><td>Indemnización (art. 64 CST)</td><td class="num">{% if calculo.dias_indemnizacion %}{{ calculo.dias_indemnizacion|numero }}{% else %}—{% endif %}</td><td class="tenue mono">salario / 30 × días</td><td class="num">{{ calculo.indemnizacion|pesos }}</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="3">Total a pagar</td><td class="num">{{ calculo.total|pesos }}</td></tr></tfoot>
+  </table>
+</section>

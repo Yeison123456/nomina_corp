@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Retiros y liquidaciones{% endblock %}
+{% block migas %}<span>Operación</span><span>Retiros y liquidaciones</span>{% endblock %}
+{% block encabezado %}Retiros y liquidaciones de contrato{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Liquidación definitiva de cesantías, intereses, prima, vacaciones e indemnización.</div>{% endblock %}
+{% block acciones %}{% if puede_editar %}<a class="btn btn--primario" href="{% url 'nomina:liquidacion_contrato_nueva' %}">Nueva liquidación</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <table class="tabla">
+    <thead><tr><th>Empleado</th><th>Contrato</th><th>Causa</th><th>Fecha de retiro</th><th class="num">Prestaciones</th><th class="num">Indemnización</th><th class="num">Total</th><th>Estado</th></tr></thead>
+    <tbody>
+    {% for l in liquidaciones %}
+      <tr>
+        <td><a class="fuerte" href="{% url 'nomina:liquidacion_contrato' l.pk %}">{{ l.contrato.empleado }}</a></td>
+        <td class="mono">{{ l.contrato.numero }}</td>
+        <td>{{ l.get_causa_display }}</td>
+        <td class="mono">{{ l.fecha_retiro|date:"d/m/Y" }}</td>
+        <td class="num">{{ l.prestaciones|pesos }}</td>
+        <td class="num">{% if l.indemnizacion %}{{ l.indemnizacion|pesos }}{% else %}—{% endif %}</td>
+        <td class="num fuerte">{{ l.total|pesos }}</td>
+        <td>{% estado l.estado l.get_estado_display %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" class="vacio">No hay liquidaciones de contrato registradas.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

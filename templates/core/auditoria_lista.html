@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría{% endblock %}
+{% block migas %}<span>Configuración</span><span>Auditoría</span>{% endblock %}
+{% block encabezado %}Bitácora de auditoría{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <form class="filtros" method="get">
+    <div class="campo campo--ancho"><label for="q">Buscar</label><input class="control" id="q" name="q" value="{{ q }}" placeholder="Acción, registro o usuario"></div>
+    <button class="btn btn--sutil" type="submit">Filtrar</button>
+  </form>
+  <table class="tabla tabla--compacta">
+    <thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Registro</th><th>Detalle</th></tr></thead>
+    <tbody>
+    {% for a in pagina %}
+      <tr>
+        <td class="mono">{{ a.fecha|date:"d/m/Y H:i:s" }}</td>
+        <td>{{ a.usuario.username|default:"sistema" }}</td>
+        <td><span class="etiqueta">{{ a.accion }}</span></td>
+        <td>{{ a.objeto }}</td>
+        <td class="tenue">{{ a.detalle|default:"" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="vacio">Sin registros.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% include "comun/_paginacion.html" %}
+</section>
+{% endblock %}

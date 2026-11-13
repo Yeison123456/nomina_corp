@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Periodos de nómina{% endblock %}
+{% block migas %}<span>Operación</span><span>Periodos de nómina</span>{% endblock %}
+{% block encabezado %}Periodos de nómina{% endblock %}
+{% block acciones %}{% if puede_editar %}<a class="btn btn--primario" href="{% url 'nomina:periodo_nuevo' %}">Nuevo periodo</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <form class="filtros" method="get">
+    <div class="campo"><label for="anio">Año</label>
+      <select class="control control--select" id="anio" name="anio" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        {% for a in anios %}<option value="{{ a }}" {% if a|stringformat:"s" == anio %}selected{% endif %}>{{ a }}</option>{% endfor %}
+      </select>
+    </div>
+  </form>
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr><th>Código</th><th>Periodo</th><th>Fechas</th><th>Pago</th><th class="num">Empleados</th><th class="num">Devengado</th><th class="num">Neto a pagar</th><th>Estado</th></tr></thead>
+    <tbody>
+    {% for p in pagina %}
+      <tr>
+        <td class="mono">{{ p.codigo }}</td>
+        <td><a class="fuerte" href="{% url 'nomina:periodo' p.pk %}">{{ p.nombre }}</a></td>
+        <td class="mono">{{ p.fecha_inicio|date:"d/m" }} – {{ p.fecha_fin|date:"d/m/Y" }}</td>
+        <td class="mono">{{ p.fecha_pago|date:"d/m/Y" }}</td>
+        <td class="num">{{ p.empleados|default:"—" }}</td>
+        <td class="num">{% if p.devengado %}{{ p.devengado|pesos }}{% else %}—{% endif %}</td>
+        <td class="num fuerte">{% if p.neto %}{{ p.neto|pesos }}{% else %}—{% endif %}</td>
+        <td>{% estado p.estado p.get_estado_display %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" class="vacio">No hay periodos creados.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "comun/_paginacion.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% if pagina.paginator.num_pages > 1 %}
+<div class="paginacion">
+  <span>Registros {{ pagina.start_index }}–{{ pagina.end_index }} de {{ pagina.paginator.count }}</span>
+  <span class="acciones">
+    {% if pagina.has_previous %}<a class="btn btn--sutil btn--peq" href="?{{ params }}&pagina={{ pagina.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+    {% if pagina.has_next %}<a class="btn btn--sutil btn--peq" href="?{{ params }}&pagina={{ pagina.next_page_number }}">Siguiente</a>{% endif %}
+  </span>
+</div>
+{% else %}
+<div class="paginacion"><span>{{ pagina.paginator.count }} registro{{ pagina.paginator.count|pluralize }}</span></div>
+{% endif %}

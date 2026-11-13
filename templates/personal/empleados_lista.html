@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Empleados{% endblock %}
+{% block migas %}<span>Personal</span><span>Empleados</span>{% endblock %}
+{% block encabezado %}Empleados{% endblock %}
+{% block subtitulo %}<div class="subtitulo">{{ total }} registro{{ total|pluralize }} con los filtros actuales</div>{% endblock %}
+{% block acciones %}{% if puede_editar %}<a class="btn btn--primario" href="{% url 'personal:empleado_nuevo' %}">Nuevo empleado</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <form class="filtros" method="get">
+    <div class="campo campo--ancho"><label for="q">Buscar</label><input class="control" id="q" name="q" value="{{ q }}" placeholder="Nombre, apellido o documento"></div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select class="control control--select" id="estado" name="estado">
+        <option value="" {% if estado == "" %}selected{% endif %}>Todos</option>
+        <option value="1" {% if estado == "1" %}selected{% endif %}>Activos</option>
+        <option value="0" {% if estado == "0" %}selected{% endif %}>Retirados</option>
+      </select>
+    </div>
+    <div class="campo"><label for="centro">Centro de costo</label>
+      <select class="control control--select" id="centro" name="centro">
+        <option value="">Todos</option>
+        {% for c in centros %}<option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == centro %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn btn--sutil" type="submit">Filtrar</button>
+  </form>
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr><th>Empleado</th><th>Documento</th><th>Cargo</th><th>Contrato</th><th>Pago</th><th class="num">Salario</th><th>Estado</th></tr></thead>
+    <tbody>
+    {% for e in pagina %}{% with c=e.contrato_vigente %}
+      <tr>
+        <td><div class="persona"><a class="fuerte" href="{% url 'personal:empleado' e.pk %}">{{ e.apellidos }}, {{ e.nombres }}</a><small>{{ e.correo }}</small></div></td>
+        <td class="mono">{{ e.tipo_documento }} {{ e.numero_documento }}</td>
+        <td>{{ c.cargo|default:"—" }}</td>
+        <td>{% if c %}<span class="mono">{{ c.numero }}</span> <span class="tenue peq">{{ c.get_tipo_display }}</span>{% else %}<span class="tenue">Sin contrato vigente</span>{% endif %}</td>
+        <td>{{ c.get_periodicidad_display|default:"—" }}</td>
+        <td class="num">{% if c %}{{ c.salario|pesos }}{% if c.es_integral %} <span class="etiqueta">Integral</span>{% endif %}{% else %}—{% endif %}</td>
+        <td>{% if e.activo %}{% estado "VIG" "Activo" %}{% else %}{% estado "TER" "Retirado" %}{% endif %}</td>
+      </tr>
+    {% endwith %}{% empty %}
+      <tr><td colspan="7" class="vacio">No se encontraron empleados.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "comun/_paginacion.html" %}
+</section>
+{% endblock %}

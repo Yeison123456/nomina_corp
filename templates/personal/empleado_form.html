@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<span>Personal</span><span><a href="{% url 'personal:empleados' %}">Empleados</a></span>{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="panel__cuerpo">
+    {% if form.non_field_errors %}<div class="mensaje mensaje--error errores-generales">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+    <div class="form-rejilla">
+      <div class="form-seccion">Identificación</div>
+      {% campo form.tipo_documento 3 %}{% campo form.numero_documento 3 %}{% campo form.fecha_nacimiento 3 %}{% campo form.genero 3 %}
+      {% campo form.nombres 6 %}{% campo form.apellidos 6 %}
+      <div class="form-seccion">Contacto</div>
+      {% campo form.correo %}{% campo form.telefono %}{% campo form.ciudad %}
+      {% campo form.direccion 12 %}
+      <div class="form-seccion">Pago de nómina</div>
+      {% campo form.banco %}{% campo form.tipo_cuenta %}{% campo form.numero_cuenta %}
+      <div class="form-seccion">Seguridad social</div>
+      {% campo form.eps 3 %}{% campo form.afp 3 %}{% campo form.fondo_cesantias 3 %}{% campo form.caja 3 %}
+      {% campo form.activo %}
+    </div>
+  </div>
+  <div class="form-acciones">
+    <a class="btn btn--sutil" href="{{ volver }}">Cancelar</a>
+    <button class="btn btn--primario" type="submit">Guardar</button>
+  </div>
+</form>
+{% endblock %}

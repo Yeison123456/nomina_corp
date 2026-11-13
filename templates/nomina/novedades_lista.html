@@ -1,0 +1,53 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Novedades{% endblock %}
+{% block migas %}<span>Operación</span><span>Novedades</span>{% endblock %}
+{% block encabezado %}Novedades de nómina{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Horas extra, recargos, ausencias, pagos y descuentos que afectan la liquidación.</div>{% endblock %}
+{% block acciones %}{% if puede_editar %}<a class="btn btn--primario" href="{% url 'nomina:novedad_nueva' %}">Registrar novedad</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <form class="filtros" method="get">
+    <div class="campo campo--ancho"><label for="q">Empleado</label><input class="control" id="q" name="q" value="{{ q }}" placeholder="Nombre o documento"></div>
+    <div class="campo"><label for="concepto">Concepto</label>
+      <select class="control control--select" id="concepto" name="concepto">
+        <option value="">Todos</option>
+        {% for c in conceptos %}<option value="{{ c.codigo }}" {% if c.codigo == concepto %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="campo"><label for="estado">Estado</label>
+      <select class="control control--select" id="estado" name="estado">
+        <option value="">Todos</option>
+        {% for v, t in estados %}<option value="{{ v }}" {% if v == estado %}selected{% endif %}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="btn btn--sutil" type="submit">Filtrar</button>
+  </form>
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr><th>Fecha</th><th>Empleado</th><th>Concepto</th><th class="num">Cantidad</th><th class="num">Valor</th><th>Observación</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for n in pagina %}
+      <tr>
+        <td class="mono">{{ n.fecha_inicio|date:"d/m/Y" }}{% if n.fecha_fin %}<br>{{ n.fecha_fin|date:"d/m/Y" }}{% endif %}</td>
+        <td><div class="persona"><a href="{% url 'personal:empleado' n.contrato.empleado.pk %}">{{ n.contrato.empleado }}</a><small>{{ n.contrato.numero }} · {{ n.contrato.get_periodicidad_display }}</small></div></td>
+        <td><span class="mono tenue">{{ n.concepto.codigo }}</span> {{ n.concepto.nombre }}</td>
+        <td class="num">{% if n.cantidad %}{{ n.cantidad|numero }} {% if n.concepto.captura == "HOR" %}h{% else %}d{% endif %}{% elif n.fecha_fin %}<span class="tenue">rango</span>{% else %}—{% endif %}</td>
+        <td class="num">{% if n.valor %}{{ n.valor|pesos }}{% else %}—{% endif %}</td>
+        <td class="tenue">{{ n.observacion|default:"" }}</td>
+        <td>{% estado n.estado n.get_estado_display %}{% if n.periodo_aplicacion %}<br><span class="mono peq tenue">{{ n.periodo_aplicacion.codigo }}</span>{% endif %}</td>
+        <td class="acc">
+          {% if puede_editar and n.estado == "PEN" %}
+            <a href="{% url 'nomina:novedad_editar' n.pk %}">Editar</a>
+            <form method="post" action="{% url 'nomina:novedad_anular' n.pk %}" onsubmit="return confirm('¿Anular la novedad?')">{% csrf_token %}<input type="hidden" name="volver" value="{{ request.get_full_path }}"><button class="vinculo" type="submit">Anular</button></form>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" class="vacio">No hay novedades con estos filtros.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% include "comun/_paginacion.html" %}
+</section>
+{% endblock %}

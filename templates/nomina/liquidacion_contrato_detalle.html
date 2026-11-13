@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Liquidación {{ liq.contrato.numero }}{% endblock %}
+{% block migas %}<span>Operación</span><span><a href="{% url 'nomina:liquidaciones_contrato' %}">Retiros y liquidaciones</a></span><span class="mono">{{ liq.contrato.numero }}</span>{% endblock %}
+{% block encabezado %}{{ liq.contrato.empleado.nombre_completo }}{% endblock %}
+{% block subtitulo %}<div class="subtitulo">{{ liq.get_causa_display }} · retiro el {{ liq.fecha_retiro|date:"d/m/Y" }} · {% estado liq.estado liq.get_estado_display %}</div>{% endblock %}
+{% block acciones %}
+  <a class="btn btn--sutil" href="{% url 'nomina:liquidacion_contrato_pdf' liq.pk %}" target="_blank">Documento PDF</a>
+  {% if liq.estado == "BOR" %}
+    {% if puede_editar %}<form method="post" action="{% url 'nomina:liquidacion_contrato_eliminar' liq.pk %}" onsubmit="return confirm('¿Eliminar el borrador?')">{% csrf_token %}<button class="btn btn--peligro" type="submit">Eliminar borrador</button></form>{% endif %}
+    {% if es_admin %}<form method="post" action="{% url 'nomina:liquidacion_contrato_aprobar' liq.pk %}" onsubmit="return confirm('Al aprobar, el contrato queda terminado y el empleado pasa a retirado. ¿Continuar?')">{% csrf_token %}<button class="btn btn--acento" type="submit">Aprobar y terminar contrato</button></form>{% endif %}
+  {% endif %}
+{% endblock %}
+{% block contenido %}
+<div class="cifras">
+  <div class="cifra"><div class="cifra__etq">Cesantías e intereses</div><div class="cifra__valor">{{ liq.cesantias|add:liq.intereses_cesantias|pesos }}</div></div>
+  <div class="cifra"><div class="cifra__etq">Prima de servicios</div><div class="cifra__valor">{{ liq.prima|pesos }}</div></div>
+  <div class="cifra"><div class="cifra__etq">Vacaciones</div><div class="cifra__valor">{{ liq.vacaciones|pesos }}</div><div class="cifra__nota">{{ liq.dias_vacaciones|numero }} días pendientes</div></div>
+  <div class="cifra"><div class="cifra__etq">Indemnización</div><div class="cifra__valor">{{ liq.indemnizacion|pesos }}</div></div>
+  <div class="cifra cifra--destacada"><div class="cifra__etq">Total a pagar</div><div class="cifra__valor">{{ liq.total|pesos }}</div></div>
+</div>
+{% if calculo %}
+  {% include "nomina/_calculo_retiro.html" %}
+  {% if calculo.total != liq.total %}<div class="aviso">El cálculo actual ({{ calculo.total|pesos }}) difiere del guardado. Puede deberse a novedades o periodos cerrados después de elaborar el borrador; elimínelo y genérelo de nuevo si corresponde.</div>{% endif %}
+{% endif %}
+{% if liq.observaciones %}<section class="panel"><div class="panel__cab"><span class="panel__titulo">Observaciones</span></div><div class="panel__cuerpo">{{ liq.observaciones|linebreaksbr }}</div></section>{% endif %}
+<p class="tenue peq">Elaborada el {{ liq.fecha_elaboracion|date:"d/m/Y H:i" }}{% if liq.elaborado_por %} por {{ liq.elaborado_por.username }}{% endif %}.</p>
+{% endblock %}

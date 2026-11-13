@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+{% block migas %}<span>Configuración</span><span>Usuarios</span>{% endblock %}
+{% block encabezado %}Usuarios y roles{% endblock %}
+{% block acciones %}<a class="btn btn--primario" href="{% url 'core:usuario_nuevo' %}">Nuevo usuario</a>{% endblock %}
+{% block contenido %}
+<div class="rejilla rejilla--7-5">
+<section class="panel">
+  <table class="tabla">
+    <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Último ingreso</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+    {% for u in usuarios %}
+      <tr>
+        <td class="mono">{{ u.username }}</td>
+        <td>{{ u.get_full_name|default:"—" }}</td>
+        <td>{% for g in u.groups.all %}<span class="etiqueta">{{ g.name }}</span>{% empty %}{% if u.is_superuser %}<span class="etiqueta">Administrador</span>{% else %}—{% endif %}{% endfor %}</td>
+        <td class="tenue">{{ u.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td>
+        <td>{% if u.is_active %}<span class="estado estado--vigente">Activo</span>{% else %}<span class="estado estado--anulada">Inactivo</span>{% endif %}</td>
+        <td class="acc"><a href="{% url 'core:usuario_editar' u.pk %}">Editar</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<section class="panel">
+  <div class="panel__cab"><span class="panel__titulo">Permisos por rol</span></div>
+  <table class="tabla tabla--compacta">
+    <thead><tr><th>Acción</th><th class="num">Admin.</th><th class="num">Analista</th><th class="num">Consulta</th></tr></thead>
+    <tbody>
+      <tr><td>Consultar información</td><td class="num">Sí</td><td class="num">Sí</td><td class="num">Sí</td></tr>
+      <tr><td>Empleados, contratos y novedades</td><td class="num">Sí</td><td class="num">Sí</td><td class="num">—</td></tr>
+      <tr><td>Crear y liquidar periodos</td><td class="num">Sí</td><td class="num">Sí</td><td class="num">—</td></tr>
+      <tr><td>Cerrar y reabrir periodos</td><td class="num">Sí</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>Aprobar liquidaciones de retiro</td><td class="num">Sí</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>Parámetros, entidades y estructura</td><td class="num">Sí</td><td class="num">—</td><td class="num">—</td></tr>
+      <tr><td>Usuarios y auditoría</td><td class="num">Sí</td><td class="num">—</td><td class="num">—</td></tr>
+    </tbody>
+  </table>
+</section>
+</div>
+{% endblock %}

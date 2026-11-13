@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<span><a href="{{ volver }}">Volver</a></span>{% endblock %}
+{% block encabezado %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<form method="post" class="panel" novalidate>
+  {% csrf_token %}
+  <div class="panel__cuerpo">
+    {% if form.non_field_errors %}<div class="mensaje mensaje--error errores-generales">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+    <div class="form-rejilla">
+      {% for field in form %}{% campo field %}{% endfor %}
+    </div>
+  </div>
+  <div class="form-acciones">
+    <a class="btn btn--sutil" href="{{ volver }}">Cancelar</a>
+    <button class="btn btn--primario" type="submit">Guardar</button>
+  </div>
+</form>
+{% endblock %}

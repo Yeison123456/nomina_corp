@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% load libra %}
+{% block titulo %}Parámetros legales{% endblock %}
+{% block migas %}<span>Configuración</span><span>Parámetros legales</span>{% endblock %}
+{% block encabezado %}Parámetros legales{% endblock %}
+{% block subtitulo %}<div class="subtitulo">Cada periodo se liquida con el registro vigente en su fecha final.</div>{% endblock %}
+{% block acciones %}{% if es_admin %}<a class="btn btn--primario" href="{% url 'core:parametro_nuevo' %}">Nueva vigencia</a>{% endif %}{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <div class="tabla-env">
+  <table class="tabla">
+    <thead><tr>
+      <th>Vigente desde</th><th>Norma o motivo</th><th class="num">SMMLV</th><th class="num">Aux. transporte</th><th class="num">UVT</th>
+      <th class="num">Horas/mes</th><th class="num">Rec. nocturno</th><th class="num">Rec. dominical</th><th class="num">HED / HEN</th><th></th>
+    </tr></thead>
+    <tbody>
+    {% for p in parametros %}
+      <tr>
+        <td class="mono">{{ p.vigente_desde|date:"d/m/Y" }}{% if forloop.first %} <span class="estado estado--vigente">Actual</span>{% endif %}</td>
+        <td>{{ p.descripcion }}</td>
+        <td class="num">{{ p.smmlv|pesos }}</td>
+        <td class="num">{{ p.auxilio_transporte|pesos }}</td>
+        <td class="num">{{ p.uvt|pesos }}</td>
+        <td class="num">{{ p.horas_mes }}</td>
+        <td class="num">{{ p.pct_recargo_nocturno|porcentaje }}</td>
+        <td class="num">{{ p.pct_recargo_dominical|porcentaje }}</td>
+        <td class="num">{{ p.pct_extra_diurna|porcentaje }} / {{ p.pct_extra_nocturna|porcentaje }}</td>
+        <td class="acc">{% if es_admin %}<a href="{% url 'core:parametro_editar' p.pk %}">Editar</a>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="10" class="vacio">No hay parámetros registrados. Ejecute <span class="mono">python manage.py inicializar_catalogos</span>.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% with p=parametros.0 %}{% if p %}
+  <div class="panel__pie tenue">
+    Aportes vigentes — empleado: salud {{ p.pct_salud_empleado|porcentaje }}, pensión {{ p.pct_pension_empleado|porcentaje }}.
+    Empleador: salud {{ p.pct_salud_empleador|porcentaje }}, pensión {{ p.pct_pension_empleador|porcentaje }}, caja {{ p.pct_caja|porcentaje }}, ICBF {{ p.pct_icbf|porcentaje }}, SENA {{ p.pct_sena|porcentaje }}.
+  </div>
+  {% endif %}{% endwith %}
+</section>
+{% endblock %}

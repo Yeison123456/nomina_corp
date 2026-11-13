@@ -1,0 +1,51 @@
+{% load static %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar · {{ producto }} Nómina</title>
+  <link rel="icon" href="{% static 'img/libra.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/libra.css' %}">
+</head>
+<body>
+<div class="ingreso">
+  <section class="ingreso__marca">
+    <div class="menu__producto">
+      <svg class="menu__simbolo" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14" stroke="#fff" stroke-width="1.6"/><path d="M12 7v11M8 18h8" stroke="#fff" stroke-width="1.6"/><path d="M5 7l-2.2 5h4.4zM19 7l-2.2 5h4.4z" fill="none" stroke="#C99A5B" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      LIBRA
+    </div>
+    <div>
+      <h1>Nómina <strong>exacta</strong>,<br>periodo tras periodo.</h1>
+      <p>Liquidación quincenal y mensual, seguridad social, provisiones y retiros bajo la legislación laboral colombiana.</p>
+    </div>
+    <div class="ingreso__datos">
+      <div><b>{{ empresa_actual.razon_social|default:"Empresa sin configurar" }}</b>{{ empresa_actual.ciudad|default:"" }}</div>
+      <div><b>Versión {{ version }}</b>Instalación local</div>
+    </div>
+  </section>
+
+  <section class="ingreso__form">
+    <form method="post" class="ingreso__caja">
+      {% csrf_token %}
+      <h2>Ingreso al sistema</h2>
+      <p class="tenue" style="margin:0 0 22px">Use las credenciales asignadas por el administrador.</p>
+      {% if form.errors %}<div class="mensaje mensaje--error" style="margin-bottom:14px">Usuario o contraseña incorrectos.</div>{% endif %}
+      <div class="campo">
+        <label for="id_username">Usuario</label>
+        <input class="control" type="text" name="username" id="id_username" autofocus autocomplete="username" required value="{{ form.username.value|default:'' }}">
+      </div>
+      <div class="campo">
+        <label for="id_password">Contraseña</label>
+        <input class="control" type="password" name="password" id="id_password" autocomplete="current-password" required>
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn btn--primario" type="submit">Ingresar</button>
+      <div class="ingreso__ayuda">
+        Ambiente de demostración — usuarios <span class="mono">admin</span>, <span class="mono">analista</span> y <span class="mono">consulta</span>.
+        Contraseña: <span class="mono">Libra2026*</span>
+      </div>
+    </form>
+  </section>
+</div>
+</body>
+</html>

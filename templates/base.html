@@ -1,0 +1,85 @@
+{% load static libra %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{% endblock %} · {{ producto }} Nómina</title>
+  <link rel="icon" href="{% static 'img/libra.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/libra.css' %}">
+</head>
+<body>
+<div class="app">
+  <nav class="menu" aria-label="Navegación principal">
+    <div class="menu__marca">
+      <div class="menu__producto">
+        <svg class="menu__simbolo" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" fill="none" stroke="rgba(255,255,255,.25)"/><path d="M5 7h14" stroke="#fff" stroke-width="1.6"/><path d="M12 7v11M8 18h8" stroke="#fff" stroke-width="1.6"/><path d="M5 7l-2.2 5h4.4zM19 7l-2.2 5h4.4z" fill="none" stroke="#C99A5B" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        LIBRA
+      </div>
+      <div class="menu__empresa">{{ empresa_actual.razon_social|default:"Empresa sin configurar" }}<br>NIT {{ empresa_actual.nit|default:"—" }}</div>
+    </div>
+
+    <div class="menu__grupo">
+      <div class="menu__titulo">Operación</div>
+      <a href="{% url 'core:tablero' %}" class="{% activo '/' %}">Tablero</a>
+      <a href="{% url 'nomina:periodos' %}" class="{% activo '/nomina/periodos/' %}{% activo '/nomina/liquidaciones/' %}">Periodos de nómina</a>
+      <a href="{% url 'nomina:novedades' %}" class="{% activo '/nomina/novedades/' %}">Novedades</a>
+      <a href="{% url 'nomina:prestamos' %}" class="{% activo '/nomina/prestamos/' %}">Préstamos y libranzas</a>
+      <a href="{% url 'nomina:liquidaciones_contrato' %}" class="{% activo '/nomina/retiros/' %}">Retiros y liquidaciones</a>
+    </div>
+    <div class="menu__grupo">
+      <div class="menu__titulo">Personal</div>
+      <a href="{% url 'personal:empleados' %}" class="{% activo '/personal/empleados/' %}">Empleados</a>
+      <a href="{% url 'personal:estructura' %}" class="{% activo '/personal/estructura/' %}">Estructura organizacional</a>
+    </div>
+    <div class="menu__grupo">
+      <div class="menu__titulo">Análisis</div>
+      <a href="{% url 'nomina:reportes' %}" class="{% activo '/nomina/reportes/' %}">Reportes</a>
+    </div>
+    <div class="menu__grupo">
+      <div class="menu__titulo">Configuración</div>
+      <a href="{% url 'core:empresa' %}" class="{% activo '/configuracion/empresa/' %}">Empresa</a>
+      <a href="{% url 'core:parametros' %}" class="{% activo '/configuracion/parametros/' %}">Parámetros legales</a>
+      <a href="{% url 'nomina:conceptos' %}" class="{% activo '/nomina/conceptos/' %}">Conceptos de nómina</a>
+      <a href="{% url 'core:entidades' %}" class="{% activo '/configuracion/entidades/' %}">Entidades</a>
+      {% if es_admin %}
+      <a href="{% url 'core:usuarios' %}" class="{% activo '/configuracion/usuarios/' %}">Usuarios</a>
+      <a href="{% url 'core:auditoria' %}" class="{% activo '/configuracion/auditoria/' %}">Auditoría</a>
+      {% endif %}
+    </div>
+    <div class="menu__pie">{{ producto }} {{ version }} · Nómina Colombia</div>
+  </nav>
+
+  <div class="contenido">
+    <header class="barra">
+      <div>{% now "l, j \d\e F \d\e Y" as hoy_texto %}{{ hoy_texto|lower|capfirst }}</div>
+      <div class="barra__usuario">
+        <span class="barra__avatar">{{ user.get_full_name|default:user.username|iniciales }}</span>
+        <span>{{ user.get_full_name|default:user.username }}</span>
+        <span class="barra__rol">{{ rol_usuario }}</span>
+        <form method="post" action="{% url 'core:logout' %}">{% csrf_token %}<button class="enlace" type="submit">Salir</button></form>
+      </div>
+    </header>
+
+    <main class="pagina">
+      <div class="encabezado">
+        <div>
+          <div class="migas">{% block migas %}{% endblock %}</div>
+          <h1>{% block encabezado %}{% endblock %}</h1>
+          {% block subtitulo %}{% endblock %}
+        </div>
+        <div class="acciones">{% block acciones %}{% endblock %}</div>
+      </div>
+
+      {% if messages %}
+      <div class="mensajes">
+        {% for m in messages %}<div class="mensaje mensaje--{{ m.tags }}">{{ m }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      {% block contenido %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>
